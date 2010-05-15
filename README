@@ -1,0 +1,31 @@
+A very simple routing library for Node.
+
+-=Step 1.=-
+
+Install routing.js in your Node path (e.g. ~/.node_libraries)
+
+-=Step 2.=-
+
+Require routing
+
+routing = require("routing");
+
+-=Step 3.=-
+
+Add routes
+
+routes.map(directory, urlPath);
+
+If the urlPath is found in a URL then routing will try serve any files found from directory based on the remaining url.
+
+.js files will be run and routing will not "serve" them, they must serve themselves
+
+.html files will be served as text/html
+
+All other files will be served as text/plain
+
+-=Step 4.=-
+
+In an HTTP server pass the request (req) and response (res) to route
+
+routing.route(req, res);
