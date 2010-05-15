@@ -21,8 +21,6 @@ exports.route = function(request, response) {
                 if (!err) {                
                     var type = filename.substring(filename.lastIndexOf(".") + 1);
                     
-                    sys.log(type);
-                    
                     if (type === "js") {
                         eval(data);
                     } else if (type === "html") {
@@ -38,6 +36,10 @@ exports.route = function(request, response) {
                     }
                     response.writeHead(200, config);
                     response.end(data);
+                } else {
+                    response.writeHead(404, {'Content-Length': 4, 'Content-Type': 'text/plain'})
+                    
+                    response.end("fail");
                 }
             });
             
@@ -45,5 +47,3 @@ exports.route = function(request, response) {
         }
     }
 }
-
-
