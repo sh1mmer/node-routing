@@ -15,7 +15,7 @@ exports.route = function(request, response) {
             //viable route found
             var filename = routes[route] + url.substring(route.length);
             
-            sys.log(filename);
+            sys.debug(filename);
             
             fs.readFile(filename, function(err, data) {
                 if (!err) {                
