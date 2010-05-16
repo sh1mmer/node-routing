@@ -25,7 +25,7 @@ exports.route = function(request, response) {
     var url = request.url;
     var readRender = function(filename, conf) {
         
-        sys.debug(filename);
+        sys.debug("Accessing: " + filename);
         
         fs.readFile(filename, function(err, data) {
             if (!err) {                
@@ -48,11 +48,13 @@ exports.route = function(request, response) {
                 response.end(data);
             } else {
                 if (conf.error) {
+                    sys.debug("File not found: displaying custom error page");
                     filename = conf.error;
                     //reset config.error to stop infinate recursion if the file doesn't exist
                     conf.error = null;
                     readRender(filename, conf)
                 } else {
+                    sys.debug("File not found: displaying default error page")
                     response.writeHead(404, {'Content-Length': 4, 'Content-Type': 'text/plain'})
 
                     response.end("fail");
