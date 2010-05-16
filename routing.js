@@ -25,6 +25,7 @@ exports.route = function(request, response) {
     var url = request.url;
     var readRender = function(filename, conf) {
         
+        sys.debug(sys.inspect(conf));
         sys.debug("Accessing: " + filename);
         
         fs.readFile(filename, function(err, data) {
@@ -69,8 +70,13 @@ exports.route = function(request, response) {
             //viable route found
             var directory = routes[route][0];
             var filename = directory + url.substring(route.length);
-                        
-            readRender(filename, conf);
+            
+            //see if there is a config for this directory, otherwise use the global
+            if (routes[route][1] !== undefined) {
+                readRender(filename, routes[route][1]);
+            } else {
+                readRender(filename, conf);
+            }
             
             break;
         }

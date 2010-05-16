@@ -5,7 +5,7 @@ routing = require("routing");
 var server = http.createServer(function (req, res) {
     routing.defineConfig({error: "/Users/croucher/test.txt"})
     routing.mapDirectory("/Users/croucher/Code/node-routing/", "/js");
-    routing.mapDirectory("/Users/croucher/", "/");
+    routing.mapDirectory("/Users/croucher/", "/", {error: "/Users/croucher/travel.html"});
     routing.route(req, res);
 });
 
