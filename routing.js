@@ -16,7 +16,7 @@ exports.defineConfig = function(c) {
 }
 
 exports.mapDirectory = function(directory, urlPath, conf) {
-    routes[urlPath] = directory;
+    routes[urlPath] = [directory, conf];
 };
 
 exports.route = function(request, response) {
@@ -67,7 +67,8 @@ exports.route = function(request, response) {
     for (route in routes) {
         if (url.indexOf(route) === 0) {
             //viable route found
-            var filename = routes[route] + url.substring(route.length);
+            var directory = routes[route][0];
+            var filename = directory + url.substring(route.length);
                         
             readRender(filename, conf);
             
