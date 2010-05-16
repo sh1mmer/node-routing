@@ -1,47 +1,73 @@
+/*
+* Config object:
+* Any combination of the following params
+* error: location for a 404 file
+*
+*/
+
 var fs = require("fs"),
     sys = require("sys");
 var routes = {};
+var conf = {};
 
-exports.mapDirectory = function(directory, urlPath) {
-    routes[urlPath] = [directory];
-    //TODO code to sort routes by specifivity
+//TODO deal with configs on a per route basis
+exports.defineConfig = function(c) {
+    conf = c;
+}
+
+exports.mapDirectory = function(directory, urlPath, conf) {
+    routes[urlPath] = directory;
 };
 
 exports.route = function(request, response) {
+    //TODO code to sort routes by specifivity
+    
     var url = request.url;
+    var readRender = function(filename, conf) {
+        
+        sys.debug(filename);
+        
+        fs.readFile(filename, function(err, data) {
+            if (!err) {                
+                var type = filename.substring(filename.lastIndexOf(".") + 1);
 
+                if (type === "js") {
+                    eval(data);
+                } else if (type === "html") {
+                    var config = {
+                        'Content-Length': data.length,
+                        'Content-Type': 'text/html'
+                    };
+                } else {
+                    var config = {
+                        'Content-Length': data.length,
+                        'Content-Type': 'text/plain'
+                    };
+                }
+                response.writeHead(200, config);
+                response.end(data);
+            } else {
+                if (conf.error) {
+                    filename = conf.error;
+                    //reset config.error to stop infinate recursion if the file doesn't exist
+                    conf.error = null;
+                    readRender(filename, conf)
+                } else {
+                    response.writeHead(404, {'Content-Length': 4, 'Content-Type': 'text/plain'})
+
+                    response.end("fail");
+                }
+            }
+        });
+
+    };
+    
     for (route in routes) {
         if (url.indexOf(route) === 0) {
             //viable route found
             var filename = routes[route] + url.substring(route.length);
-            
-            sys.debug(filename);
-            
-            fs.readFile(filename, function(err, data) {
-                if (!err) {                
-                    var type = filename.substring(filename.lastIndexOf(".") + 1);
-                    
-                    if (type === "js") {
-                        eval(data);
-                    } else if (type === "html") {
-                        var config = {
-                            'Content-Length': data.length,
-                            'Content-Type': 'text/html'
-                        };
-                    } else {
-                        var config = {
-                            'Content-Length': data.length,
-                            'Content-Type': 'text/plain'
-                        };
-                    }
-                    response.writeHead(200, config);
-                    response.end(data);
-                } else {
-                    response.writeHead(404, {'Content-Length': 4, 'Content-Type': 'text/plain'})
-                    
-                    response.end("fail");
-                }
-            });
+                        
+            readRender(filename, conf);
             
             break;
         }
