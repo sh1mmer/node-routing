@@ -2,7 +2,7 @@
 * Config object:
 * Any combination of the following params
 * error: location for a 404 file
-*
+* execute: run javascript files
 */
 
 var fs = require("fs"),
@@ -23,8 +23,9 @@ exports.route = function(request, response) {
     //TODO code to sort routes by specifivity
     
     var url = request.url;
-    var readRender = function(filename, conf) {
+    var readRender = function(filename, c) {
         
+        sys.debug(sys.inspect(c));
         sys.debug(sys.inspect(conf));
         sys.debug("Accessing: " + filename);
         
@@ -32,28 +33,34 @@ exports.route = function(request, response) {
             if (!err) {                
                 var type = filename.substring(filename.lastIndexOf(".") + 1);
 
-                if (type === "js") {
+                if (type === "js" && c.execute === true) {
                     eval(data);
-                } else if (type === "html") {
-                    var config = {
-                        'Content-Length': data.length,
-                        'Content-Type': 'text/html'
-                    };
+                } else if (type === "js") {
+                    sys.debug("JavaScript disallowed");
+                    //call an empty filename for this conf triggering it's error page cycle
+                    //TODO fixup non 404 type errors
+                    readRender("", c);
                 } else {
-                    var config = {
-                        'Content-Length': data.length,
-                        'Content-Type': 'text/plain'
-                    };
+                    if (type === "html") {
+                        var config = {
+                            'Content-Length': data.length,
+                            'Content-Type': 'text/html'
+                        };
+                    } else {
+                        var config = {
+                            'Content-Length': data.length,
+                            'Content-Type': 'text/plain'
+                        };
+                    }
+                    response.writeHead(200, config);
+                    response.end(data);
                 }
-                response.writeHead(200, config);
-                response.end(data);
             } else {
-                if (conf.error) {
+                if (c.error && filename !== c.error) {
                     sys.debug("File not found: displaying custom error page");
-                    filename = conf.error;
-                    //reset config.error to stop infinate recursion if the file doesn't exist
-                    conf.error = null;
-                    readRender(filename, conf)
+                    filename = c.error;
+                    //reset conf.error to stop infinite recursion if the error file doesn't exist
+                    readRender(filename, c)
                 } else {
                     sys.debug("File not found: displaying default error page")
                     response.writeHead(404, {'Content-Length': 4, 'Content-Type': 'text/plain'})
@@ -73,8 +80,11 @@ exports.route = function(request, response) {
             
             //see if there is a config for this directory, otherwise use the global
             if (routes[route][1] !== undefined) {
-                readRender(filename, routes[route][1]);
+                var c = routes[route][1];
+                sys.debug(sys.inspect(routes[route][1]));
+                readRender(filename, c);
             } else {
+                sys.debug(sys.inspect(routes[route][1]));
                 readRender(filename, conf);
             }
             
